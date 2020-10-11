@@ -8,7 +8,7 @@ from models import generate_noise, Generator, Discriminator, gen_loss, disc_loss
 from utils import show_tensor_images, save_tensor_images
 from tqdm.auto import tqdm
 
-# set parameters
+# configs
 criterion = nn.BCEWithLogitsLoss()
 epochs = 200
 noise_dim = 64
@@ -45,6 +45,8 @@ curr_step = 0
 mean_generator_loss = 0
 mean_discriminator_loss = 0
 gen_loss_ = False
+
+print("Starting training...")
 
 for epoch in range(epochs):
     # getting images in a batch from the dataloader
@@ -87,5 +89,7 @@ for epoch in range(epochs):
         curr_step += 1
 
 if save:
-    torch.save(gen.state_dict(), model_save_path)
-    torch.save(disc.state_dict(), model_save_path)
+    torch.save(gen.state_dict(), os.path.join(model_save_path, 'gen.pt'))
+    torch.save(disc.state_dict(), os.path.join(model_save_path, 'disc.pt'))
+
+print("Training complete!")
