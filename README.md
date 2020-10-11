@@ -1,5 +1,5 @@
 # Hand written number generation using GAN
-This is a PyTorch implementation of a simple GAN that generates handwritten digits similar to that of human's. Feel free to play around!
+This is a PyTorch implementation of a simple GAN that generates handwritten digits similar to that of a human's. Feel free to play around!
 
 ![generated output](https://user-images.githubusercontent.com/43356500/95690791-2b32cd80-0be8-11eb-8cf3-81f2e88553c0.png)
 
@@ -21,10 +21,12 @@ Generated images are saved under 'images' folder.
 
 Further training and fine-tuning will improve the results, but there are clear limitations with simple GAN. There will be future updates with a more sophisticated methods, so stay tuned!
 
-* Human digits
+Human digits
+
 ![original](https://user-images.githubusercontent.com/43356500/95690841-a0060780-0be8-11eb-9096-30b670c4ff4c.png)
 
-* Generated digits
+Generated digits
+
 ![generated output](https://user-images.githubusercontent.com/43356500/95690791-2b32cd80-0be8-11eb-8cf3-81f2e88553c0.png)
 
 Could still use some work, but not too bad! :)
