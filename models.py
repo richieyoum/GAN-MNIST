@@ -33,7 +33,7 @@ def discriminator_block(input_dim, output_dim):
         input_dim (int): input dimension
         output_dim (int): desired output dimension
     returns:
-        sequential layer for discriminator with linear layer and LeakyReLU activation to resolve vanishing gradient problem
+        sequential layer for discriminator with linear layer and LeakyReLU activation to resolve dying ReLU problem
     """
     return nn.Sequential(
         nn.Linear(input_dim, output_dim),
