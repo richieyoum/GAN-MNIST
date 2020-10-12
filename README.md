@@ -37,6 +37,7 @@ SimpleGAN output
 ![generated output](https://user-images.githubusercontent.com/43356500/95690791-2b32cd80-0be8-11eb-8cf3-81f2e88553c0.png)
 
 DCGAN output
+
 ![dcgan output](https://user-images.githubusercontent.com/43356500/95772146-45bd8300-0c8a-11eb-88ff-e4f6e1a49cdb.png)
 
 Could still use some work, but not too bad! :)
