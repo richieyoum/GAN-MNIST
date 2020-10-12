@@ -56,6 +56,48 @@ class Generator(nn.Module):
         """
         return self.gen(noise)
 
+class Discriminator(nn.Module):
+    """
+    class for discriminator model of the GAN
+    params:
+        input_dim (int): dimension of the input, which is the output of the generator. Default set to 784 for MNIST (28 x 28)
+        hidden_dim (int): hidden dimension to be used as a base unit
+    returns:
+        Discriminator model
+    """
+    def __init__(self, input_dim=784, hidden_dim=128):
+        super(Discriminator, self).__init__()
+        self.disc = nn.Sequential(
+            self.discriminator_block(input_dim, hidden_dim*4),
+            self.discriminator_block(hidden_dim*4, hidden_dim*2),
+            self.discriminator_block(hidden_dim*2, hidden_dim),
+            # boolean output for discriminator - Fake or Real
+            nn.Linear(hidden_dim, 1)
+        )
+
+    def discriminator_block(self, input_dim, output_dim):
+        """
+        block of layer for discriminator
+        params:
+            input_dim (int): input dimension
+            output_dim (int): desired output dimension
+        returns:
+            sequential layer for discriminator with linear layer and LeakyReLU activation to resolve vanishing gradient problem
+        """
+        return nn.Sequential(
+            nn.Linear(input_dim, output_dim),
+            nn.LeakyReLU(.2)
+        )
+
+    def forward(self, image):
+        """
+        forward pass of the discriminator
+        params:
+            image: image tensor (output of the generator)
+        returns:
+        """
+        return self.disc(image)
+
 class DC_Generator(nn.Module):
     """
     class for generator model of DCGAN
@@ -116,48 +158,6 @@ class DC_Generator(nn.Module):
         """
         x = self.unsqueeze_noise(noise)
         return self.gen(x)
-
-class Discriminator(nn.Module):
-    """
-    class for discriminator model of the GAN
-    params:
-        input_dim (int): dimension of the input, which is the output of the generator. Default set to 784 for MNIST (28 x 28)
-        hidden_dim (int): hidden dimension to be used as a base unit
-    returns:
-        Discriminator model
-    """
-    def __init__(self, input_dim=784, hidden_dim=128):
-        super(Discriminator, self).__init__()
-        self.disc = nn.Sequential(
-            self.discriminator_block(input_dim, hidden_dim*4),
-            self.discriminator_block(hidden_dim*4, hidden_dim*2),
-            self.discriminator_block(hidden_dim*2, hidden_dim),
-            # boolean output for discriminator - Fake or Real
-            nn.Linear(hidden_dim, 1)
-        )
-
-    def discriminator_block(self, input_dim, output_dim):
-        """
-        block of layer for discriminator
-        params:
-            input_dim (int): input dimension
-            output_dim (int): desired output dimension
-        returns:
-            sequential layer for discriminator with linear layer and LeakyReLU activation to resolve vanishing gradient problem
-        """
-        return nn.Sequential(
-            nn.Linear(input_dim, output_dim),
-            nn.LeakyReLU(.2)
-        )
-
-    def forward(self, image):
-        """
-        forward pass of the discriminator
-        params:
-            image: image tensor (output of the generator)
-        returns:
-        """
-        return self.disc(image)
 
 class DC_Discriminator(nn.Module):
     """
