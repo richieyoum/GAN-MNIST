@@ -11,8 +11,6 @@ def generate_noise(n_samples, noise_dim, device='cpu'):
     """
     return torch.randn(n_samples, noise_dim, device=device)
 
-
-=======
 def generator_block(input_dim, output_dim):
     """
     block of layer for generator
