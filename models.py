@@ -11,6 +11,36 @@ def generate_noise(n_samples, noise_dim, device='cpu'):
     """
     return torch.randn(n_samples, noise_dim, device=device)
 
+def generator_block(input_dim, output_dim):
+    """
+    block of layer for generator
+    params:
+        input_dim (int): input dimension
+        output_dim (int): desired output dimension
+    returns:
+        sequential layer for generator with linear layer, 1D batchnorm and ReLU activation
+    """
+    return nn.Sequential(
+        nn.Linear(input_dim, output_dim),
+        nn.BatchNorm1d(output_dim),
+        nn.ReLU()
+    )
+
+def discriminator_block(input_dim, output_dim):
+    """
+    block of layer for discriminator
+    params:
+        input_dim (int): input dimension
+        output_dim (int): desired output dimension
+    returns:
+        sequential layer for discriminator with linear layer and LeakyReLU activation to resolve dying ReLU problem
+    """
+    return nn.Sequential(
+        nn.Linear(input_dim, output_dim),
+        nn.LeakyReLU(.2)
+    )
+
+
 class Generator(nn.Module):
     """
     class for generator model of the GAN
