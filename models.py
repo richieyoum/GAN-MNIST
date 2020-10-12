@@ -11,6 +11,8 @@ def generate_noise(n_samples, noise_dim, device='cpu'):
     """
     return torch.randn(n_samples, noise_dim, device=device)
 
+
+=======
 def generator_block(input_dim, output_dim):
     """
     block of layer for generator
@@ -40,6 +42,7 @@ def discriminator_block(input_dim, output_dim):
         nn.LeakyReLU(.2)
     )
 
+
 class Generator(nn.Module):
     """
     class for generator model of the GAN
@@ -53,12 +56,27 @@ class Generator(nn.Module):
     def __init__(self, noise_dim, output_dim=784, hidden_dim=128):
         super(Generator, self).__init__()
         self.gen = nn.Sequential(
-            generator_block(noise_dim, hidden_dim),
-            generator_block(hidden_dim, hidden_dim*2),
-            generator_block(hidden_dim*2, hidden_dim*4),
-            generator_block(hidden_dim*4, hidden_dim*8),
+            self.generator_block(noise_dim, hidden_dim),
+            self.generator_block(hidden_dim, hidden_dim*2),
+            self.generator_block(hidden_dim*2, hidden_dim*4),
+            self.generator_block(hidden_dim*4, hidden_dim*8),
             nn.Linear(hidden_dim*8, output_dim),
             nn.Sigmoid()
+        )
+
+    def generator_block(self, input_dim, output_dim):
+        """
+        block of layer for generator
+        params:
+            input_dim (int): input dimension
+            output_dim (int): desired output dimension
+        returns:
+            sequential layer for generator with linear layer, 1D batchnorm and ReLU activation
+        """
+        return nn.Sequential(
+            nn.Linear(input_dim, output_dim),
+            nn.BatchNorm1d(output_dim),
+            nn.ReLU()
         )
 
     def forward(self, noise):
@@ -70,6 +88,66 @@ class Generator(nn.Module):
         """
         return self.gen(noise)
 
+class DC_Generator(nn.Module):
+    """
+    class for generator model of DCGAN
+    params:
+        noise_dim (int): dimension of the noise vector
+        output_channel (int): desired output channel
+        hidden_dim (int): hidden dimension to be used as a base unit
+    returns:
+        Generator model
+    """
+    def __init__(self, noise_dim=10, output_channel=1, hidden_dim=64):
+        super(DC_Generator, self).__init__()
+        self.noise_dim = noise_dim
+        self.gen = nn.Sequential(
+            self.generator_block(noise_dim, hidden_dim*4),
+            self.generator_block(hidden_dim*4, hidden_dim*2, kernel_size=4, stride=1),
+            self.generator_block(hidden_dim*2, hidden_dim),
+            self.generator_block(hidden_dim, output_channel, kernel_size=4, final_layer=True)
+        )
+
+    def generator_block(self, input_channel, output_channel, kernel_size=3, stride=2, final_layer=False):
+        """
+        block of layer for generator
+        params:
+            input_channel (int): number of channels in input image
+            output_channel (int): number of channels in the output image
+        returns:
+            sequential layer for generator with linear layer, 1D batchnorm and ReLU activation
+        """
+        if not final_layer:
+            return nn.Sequential(
+                nn.ConvTranspose2d(input_channel, output_channel, kernel_size, stride),
+                nn.BatchNorm2d(output_channel),
+                nn.ReLU()
+            )
+        else:
+            return nn.Sequential(
+                nn.ConvTranspose2d(input_channel, output_channel, kernel_size=4, stride=2),
+                nn.Tanh()
+            )
+
+    def unsqueeze_noise(self, noise):
+        """
+        function to return a squeezed noise tensor
+        param:
+            noise: noise tensor (n_samples, noise_dim)
+        returns:
+            squeezed noise tensor
+        """
+        return noise.view(len(noise), self.noise_dim, 1, 1)
+ 
+    def forward(self, noise):
+        """
+        forward pass of the generator
+        params:
+            noise: noise tensor (n_samples, noise_dim)
+        returns:
+        """
+        x = self.unsqueeze_noise(noise)
+        return self.gen(x)
 
 class Discriminator(nn.Module):
     """
@@ -83,11 +161,25 @@ class Discriminator(nn.Module):
     def __init__(self, input_dim=784, hidden_dim=128):
         super(Discriminator, self).__init__()
         self.disc = nn.Sequential(
-            discriminator_block(input_dim, hidden_dim*4),
-            discriminator_block(hidden_dim*4, hidden_dim*2),
-            discriminator_block(hidden_dim*2, hidden_dim),
+            self.discriminator_block(input_dim, hidden_dim*4),
+            self.discriminator_block(hidden_dim*4, hidden_dim*2),
+            self.discriminator_block(hidden_dim*2, hidden_dim),
             # boolean output for discriminator - Fake or Real
             nn.Linear(hidden_dim, 1)
+        )
+
+    def discriminator_block(self, input_dim, output_dim):
+        """
+        block of layer for discriminator
+        params:
+            input_dim (int): input dimension
+            output_dim (int): desired output dimension
+        returns:
+            sequential layer for discriminator with linear layer and LeakyReLU activation to resolve vanishing gradient problem
+        """
+        return nn.Sequential(
+            nn.Linear(input_dim, output_dim),
+            nn.LeakyReLU(.2)
         )
 
     def forward(self, image):
@@ -98,6 +190,53 @@ class Discriminator(nn.Module):
         returns:
         """
         return self.disc(image)
+
+class DC_Discriminator(nn.Module):
+    """
+    class for discriminator model of the DCGAN
+    params:
+        input_channel (int): number of channels in input image, which is the output of the generator. Default set to 1 for MNIST (grayscale)
+        hidden_dim (int): hidden dimension to be used as a base unit
+    returns:
+        Discriminator model
+    """
+    def __init__(self, input_channel=1, hidden_dim=16):
+        super(DC_Discriminator, self).__init__()
+        self.disc = nn.Sequential(
+            self.discriminator_block(input_channel, hidden_dim),
+            self.discriminator_block(hidden_dim, hidden_dim*2),
+            self.discriminator_block(hidden_dim*2, 1, final_layer=True)
+        )
+
+    def discriminator_block(self, input_channel, output_channel, kernel_size=4, stride=2, final_layer=False):
+        """
+        block of layer for discriminator
+        params:
+            input_dim (int): input dimension
+            output_dim (int): desired output dimension
+        returns:
+            sequential layer for discriminator with linear layer and LeakyReLU activation to resolve vanishing gradient problem
+        """
+        if not final_layer:
+            return nn.Sequential(
+                nn.Conv2d(input_channel, output_channel, kernel_size, stride),
+                nn.BatchNorm2d(output_channel),
+                nn.LeakyReLU(.2)
+            )
+        else:
+            return nn.Sequential(
+                nn.Conv2d(input_channel, output_channel, kernel_size, stride)
+            )
+    
+    def forward(self, image):
+        """
+        forward pass of the discriminator
+        params:
+            image: image tensor (output of the generator)
+        returns:
+        """
+        disc_pred = self.disc(image)
+        return disc_pred.view(len(disc_pred), -1)
 
 
 def disc_loss(gen, disc, criterion, real_imgs, num_images, noise_dim, device):
